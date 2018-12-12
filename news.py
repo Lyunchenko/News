@@ -1,42 +1,41 @@
 
-import pickle
+import db_parser
+
 
 class News:
 
 	def __init__(self):
 		self._news = {}
-		self._db = None 
+		self._db = db_parser.DBParser() 
 		self._get_list_news()
 
 
 	def set_news(self, news):
+		""" Добавление новости в словарь"""
 		id_news = news['id']
 		if self._chek_add_id(id_news): 
 			self._news[id_news] = news
 
 	def get_news(self):
+		""" Получение списка новостей"""
 		return(self._news)
 
 	def set_attribute(self, id_news, attribute, value):
+		""" Добавление/изменение аттрибута новости """
 		self._news[id_news][attribute] = value
 
 	def get_attribute(self, id_news, attribute):
+		""" Получение аттрибута новости """
 		return(self._news[id_news][attribute])
 
-# !!!
 	def save_to_db(self):
-		# Сохранение ссылок на страницы в дамп
-		file = open('news_dump.pcl', 'wb')
-		pickle.dump(self._news, file)
-		file.close()
-
+		""" Сохранение всех новостей в базу днных"""
+		self._db.set_news(self._news)
 		self._news = {}
 
-# !!!
 	def _get_list_news(self):
 		""" Загрузка списка id последних новостей из базы """
-		self._list_news = []
-		pass
+		self._list_news = self._db.get_list_news()
 
 	def _chek_add_id(self, id_news):
 		""" Проверка наличия новости и добавление ее в список проверки """
