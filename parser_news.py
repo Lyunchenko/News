@@ -16,15 +16,18 @@ class ParserNews:
 
 
 	def set_channel(self, url):
+		""" Добавление RSS канала Yandex-новости в список обработки"""
 		not_in_list = False
 		try: self._channels.index(url)
 		except Exception as e: not_in_list = True
 		if not_in_list: self._channels.append(url)
 
 	def get_channel(self):
+		""" Получение списка всех каналов в обработке """
 		return(self._channels)
 
 	def del_channel(self, url):
+		""" Удаление какнала из списка обработки """
 		in_list = True
 		try: self._channels.index(url)
 		except Exception as e: in_list = False
@@ -32,6 +35,8 @@ class ParserNews:
 
 
 	def start_parse(self):
+		""" Запуск процедуры парсинга новостей из каналов"""
+		
 		# Парсинг даных из новостной ленты yandex
 		print('RSS')
 		links = []
@@ -110,9 +115,10 @@ class ParserNews:
 
 
 	def _parse_site(self, id_news, url_text):
+		""" Парсинг html страицы с новостью"""
 		soup = BeautifulSoup(url_text, 'lxml')
-		
-		# Поиск по тексту из описания в rss
+		# Описание новости из rss должно встречаться в исходной статье
+		# Разбиваем описание на несколько частей т.к. можно стлнуться с ссылками по тексту
 		description = self._news.get_attribute(id_news, 'description')
 		cut = int(len(description)/4)
 		tasks = [description, description[:-cut], description[cut:],
@@ -125,7 +131,6 @@ class ParserNews:
 			except Exception as e: 
 				text = None
 			if text != None: return(text)
-
 
 
 obj = ParserNews()
