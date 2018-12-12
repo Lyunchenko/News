@@ -2,6 +2,8 @@
 import asyncio
 import aiohttp
 import feedparser
+from bs4 import BeautifulSoup
+import re
 from datetime import datetime
 import news
 
@@ -13,11 +15,14 @@ class ParserNews:
 		self._news = news.News()
 
 
-	def add_channel(self, url):
+	def set_channel(self, url):
 		not_in_list = False
 		try: self._channels.index(url)
 		except Exception as e: not_in_list = True
 		if not_in_list: self._channels.append(url)
+
+	def get_channel(self):
+		return(self._channels)
 
 	def del_channel(self, url):
 		in_list = True
@@ -27,16 +32,24 @@ class ParserNews:
 
 
 	def start_parse(self):
+		# Парсинг даных из новостной ленты yandex
+		print('RSS')
 		links = []
 		for url in self._channels:
 			links.append([url, None])
 		asyncio.run(self._get_news(links, self._handler_rss))
 
-		links = []
-		news_list = self._news.get_news()
-		for i in news_list:
-			links.append([news_list[i]['url'], news_list[i]['id']])
-		asyncio.run(self._get_news(links, self._handler_site))
+		# 1 проход - получение настоящих ссылок со страниц яндекса
+		# 2 проход - получение полного текста новостей с первоисточника
+		tasks = [['url_ya', self._handler_ya],
+				 ['url', self._handler_site]]
+		for task in tasks:
+			print(task[0])
+			links = []
+			news_list = self._news.get_news()
+			for i in news_list:
+				links.append([news_list[i][task[0]], news_list[i]['id']])
+			asyncio.run(self._get_news(links, task[1]))
 
 		self._news.save_to_db()
 
@@ -58,15 +71,23 @@ class ParserNews:
 							date.tm_hour, date.tm_min, date.tm_sec)
 			news = {'id': record.id,
 					'title': record.title,
-					'url': record.link,
+					'url_ya': record.link,
 					'date': date,
 					'description': record.description}
 			self._news.set_news(news)
 
 
+	def _handler_ya(self, url_text, id_news):
+		""" Получение ссылок на исходные статьи со страниц яндекса """
+		soup = BeautifulSoup(url_text, 'lxml')
+		url = soup.find(attrs={'class':'doc__content'}).find('a')['href']
+		self._news.set_attribute(id_news, 'url', url)
+
 	def _handler_site(self, url_text, id_news):
-		""" Получение полного текста новости """
-		pass
+		""" Получение всего текста новостей"""
+		self._news.set_attribute(id_news, 'text_html', url_text)
+		text = self._parse_site(id_news, url_text)
+		self._news.set_attribute(id_news, 'text', text)
 
 
 	async def _get_news(self, links, handler):
@@ -88,9 +109,27 @@ class ParserNews:
 				return await response.text()
 
 
+	def _parse_site(self, id_news, url_text):
+		soup = BeautifulSoup(url_text, 'lxml')
+		
+		# Поиск по тексту из описания в rss
+		description = self._news.get_attribute(id_news, 'description')
+		cut = int(len(description)/4)
+		tasks = [description, description[:-cut], description[cut:],
+				 description[:cut*2], description[cut*2:],
+				 description[cut:], description[cut:cut*2], 
+				 description[cut*2:cut*3], description[cut*3:]]
+		for task in tasks:
+			try: 
+				text = soup.find(text=re.compile(task)).parent.parent.text
+			except Exception as e: 
+				text = None
+			if text != None: return(text)
+
+
 
 obj = ParserNews()
-obj.add_channel('https://news.yandex.ru/business.rss')
-#obj.add_channel('https://news.yandex.ru/finances.rss')
-#obj.add_channel('https://news.yandex.ru/politics.rss')
+obj.set_channel('https://news.yandex.ru/business.rss')
+#obj.set_channel('https://news.yandex.ru/finances.rss')
+#obj.set_channel('https://news.yandex.ru/politics.rss')
 obj.start_parse()

@@ -27,7 +27,7 @@ class TestNews(unittest.TestCase):
         self.assertEqual(len(obj._news), 2) # в словаре 2 элемента
 
 
-    def test_update_news(self):
+    def test_set_attribute(self):
         obj = news.News()
         example = {'id': 1,
                    'title': 'record.title',
@@ -41,7 +41,7 @@ class TestNews(unittest.TestCase):
                    'date': 'date',
                    'description': 'record.description'}
         obj.set_news(example)
-        obj.update_news(2, 'text', 'text news')
+        obj.set_attribute(2, 'text', 'text news')
         example = {'id': 2,
                    'title': 'record.title',
                    'link': 'record.link',
@@ -59,15 +59,15 @@ class TestParserNews(unittest.TestCase):
         obj = parser_news.ParserNews()
         self.assertEqual(len(obj._channels), 0) # Создание объекта с пустым списком каналов
         
-        obj.add_channel('url')
+        obj.set_channel('url')
         self.assertIn('url', obj._channels) # Добавление адреса rss канала
         self.assertEqual(len(obj._channels), 1) # Добавление адреса rss канала
 
-        obj.add_channel('url')
+        obj.set_channel('url')
         self.assertIn('url', obj._channels) # Повторное добавление существующего канала
         self.assertEqual(len(obj._channels), 1) # Повторное добавление существующего канала
         
-        obj.add_channel('url2')
+        obj.set_channel('url2')
         self.assertIn('url2', obj._channels) # Добавление 2-х каналов
         self.assertEqual(len(obj._channels), 2) # Добавление 2-х каналов
 

@@ -1,5 +1,5 @@
 
-import pandas
+import pickle
 
 class News:
 
@@ -17,15 +17,22 @@ class News:
 	def get_news(self):
 		return(self._news)
 
-	def update_news(self, id_news, attribute, value):
+	def set_attribute(self, id_news, attribute, value):
 		self._news[id_news][attribute] = value
 
+	def get_attribute(self, id_news, attribute):
+		return(self._news[id_news][attribute])
+
+# !!!
 	def save_to_db(self):
-		df = pandas.DataFrame(self._news).T
-		df.to_csv('data.csv', sep=';')
+		# Сохранение ссылок на страницы в дамп
+		file = open('news_dump.pcl', 'wb')
+		pickle.dump(self._news, file)
+		file.close()
+
 		self._news = {}
 
-
+# !!!
 	def _get_list_news(self):
 		""" Загрузка списка id последних новостей из базы """
 		self._list_news = []
