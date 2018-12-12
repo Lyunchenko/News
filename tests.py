@@ -1,6 +1,56 @@
 import unittest
 import parser_news
+import news
 
+
+class TestNews(unittest.TestCase):
+
+    def test_set_news(self):
+        obj = news.News()
+        example = {'id': 1,
+                   'title': 'record.title',
+                   'link': 'record.link',
+                   'date': 'date',
+                   'description': 'record.description'}
+        obj.set_news(example)
+        self.assertEqual(obj._news[1], example) # элемент бодавлен в словарь
+        self.assertEqual(len(obj._news), 1) # в словаре только 1 элемент
+        obj.set_news(example)
+        self.assertEqual(len(obj._list_news), 1) # элемент повторно не добавлен
+        example = {'id': 2,
+                   'title': 'record.title',
+                   'link': 'record.link',
+                   'date': 'date',
+                   'description': 'record.description'}
+        obj.set_news(example)
+        self.assertEqual(obj._news[2], example) # элемент бодавлен в словарь
+        self.assertEqual(len(obj._news), 2) # в словаре 2 элемента
+
+
+    def test_update_news(self):
+        obj = news.News()
+        example = {'id': 1,
+                   'title': 'record.title',
+                   'link': 'record.link',
+                   'date': 'date',
+                   'description': 'record.description'}
+        obj.set_news(example)
+        example = {'id': 2,
+                   'title': 'record.title',
+                   'link': 'record.link',
+                   'date': 'date',
+                   'description': 'record.description'}
+        obj.set_news(example)
+        obj.update_news(2, 'text', 'text news')
+        example = {'id': 2,
+                   'title': 'record.title',
+                   'link': 'record.link',
+                   'date': 'date',
+                   'description': 'record.description',
+                   'text': 'text news'}
+        self.assertEqual(obj._news[2], example)
+
+        
 
 class TestParserNews(unittest.TestCase):
 
@@ -32,6 +82,10 @@ class TestParserNews(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+
 
 
 

@@ -14,29 +14,36 @@ class ParserNews:
 
 
 	def add_channel(self, url):
-		""" Добавление RSS канала в парсер"""
 		not_in_list = False
 		try: self._channels.index(url)
 		except Exception as e: not_in_list = True
 		if not_in_list: self._channels.append(url)
 
-
 	def del_channel(self, url):
-		""" Удаленеи RSS канала из парсера"""
 		in_list = True
 		try: self._channels.index(url)
 		except Exception as e: in_list = False
 		if in_list: self._channels.remove(url)
 
+
 	def start_parse(self):
-		""" Запуск асинхронной выгрузки новостей из каналов """
-		asyncio.run(self.get_news(self._channels, self.handler_rss))
-		print(self._news)
+		links = []
+		for url in self._channels:
+			links.append([url, None])
+		asyncio.run(self._get_news(links, self._handler_rss))
+
+		links = []
+		news_list = self._news.get_news()
+		for i in news_list:
+			links.append([news_list[i]['url'], news_list[i]['id']])
+		asyncio.run(self._get_news(links, self._handler_site))
+
+		self._news.save_to_db()
 
 
-	def handler_rss(self, url_text, id_news):
+	def _handler_rss(self, url_text, id_news):
 		""" Обработка RSS ленты каждого канала"""
-		rss_data = feedparser.parse(rss_text)
+		rss_data = feedparser.parse(url_text)
 		for record in rss_data.entries:
 			chek = 'title' in record\
 					and 'link' in record\
@@ -51,32 +58,30 @@ class ParserNews:
 							date.tm_hour, date.tm_min, date.tm_sec)
 			news = {'id': record.id,
 					'title': record.title,
-					'link': record.link,
+					'url': record.link,
 					'date': date,
-					'description': record.description,
-					'text': None}
+					'description': record.description}
 			self._news.set_news(news)
 
-	def handler_site(self, url_text, id_news):
+
+	def _handler_site(self, url_text, id_news):
+		""" Получение полного текста новости """
 		pass
 
 
-
-	async def get_news(self, links, handler, id_news = None):
+	async def _get_news(self, links, handler):
 		""" Асинхронный запуск списка задач """
 		tasks = []
-		for url in links:
-			tasks.append(asyncio.create_task(self.fetch_async(url, handler, id_news)))
+		for l in links:
+			tasks.append(asyncio.create_task(self._fetch_async(l[0], handler, l[1])))
 		await asyncio.wait(tasks)
 
-
-	async def fetch_async(self, url, handler, id_news):
+	async def _fetch_async(self, url, handler, id_news):
 		""" Запрос текста страницы передача в обработчик """
-		url_text = await self.aiohttp_get(url)
+		url_text = await self._aiohttp_get(url)
 		handler(url_text, id_news)
 
-
-	async def aiohttp_get(self, url):
+	async def _aiohttp_get(self, url):
 		""" Получение текста страницы """
 		async with aiohttp.ClientSession() as session:
 			async with session.get(url) as response:
@@ -86,6 +91,6 @@ class ParserNews:
 
 obj = ParserNews()
 obj.add_channel('https://news.yandex.ru/business.rss')
-obj.add_channel('https://news.yandex.ru/finances.rss')
-obj.add_channel('https://news.yandex.ru/politics.rss')
+#obj.add_channel('https://news.yandex.ru/finances.rss')
+#obj.add_channel('https://news.yandex.ru/politics.rss')
 obj.start_parse()
