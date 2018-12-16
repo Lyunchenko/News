@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import ChoiceIndex, ChoiceType, NewsData, Channels
+
+admin.site.register(ChoiceIndex)
+admin.site.register(ChoiceType)
+admin.site.register(NewsData)
+admin.site.register(Channels)

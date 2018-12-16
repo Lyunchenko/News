@@ -1,0 +1,10 @@
+{% if news_list %}
+	<h1>Текущие новости</h1>
+    <ul>
+    {% for news in news_list %}
+        <li><a href="{% url 'news:detail' news.id %}">{{ news.title }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>В базе данных нет не обработаных новостей</p>
+{% endif %}
