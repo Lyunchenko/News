@@ -1,0 +1,32 @@
+<h1>{{ news.title }}</h1>
+<i>{{ news.description }}</i>
+<p>{{ news.text }}</p>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+
+<form action="{% url 'news:choice' news.id %}" method="post">
+	{% csrf_token %}
+	
+	<br><b>Принадлежность к индексу:</b><br>
+	{% for choice in index_var %}
+		<input type="radio" 
+	    	   name="index" 
+	    	   id="index{{ forloop.counter }}" 
+	    	   value="{{ choice.id }}"
+	    	   {{ choice.checked }}>
+	    <label for="index{{ forloop.counter }}">{{ choice.name }}</label><br>
+	{% endfor %}
+
+	<br><b>Тип прогноза:</b><br>
+	{% for choice in type_var %}
+		<input type="radio" 
+	    	   name="type" 
+	    	   id="type{{ forloop.counter }}" 
+	    	   value="{{ choice.id }}"
+	    	   {{ choice.checked }}>
+	    <label for="type{{ forloop.counter }}">{{ choice.name }}</label><br>
+	{% endfor %}
+
+	<br><input type="submit" value="Сохранить">
+</form>
